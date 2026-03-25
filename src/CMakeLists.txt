@@ -11,17 +11,23 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(GTest REQUIRED)
 
-add_subdirectory(core)
+add_subdirectory(graph)
+add_subdirectory(containers)
+add_subdirectory(algorithms)
 
 add_executable(Main main.cpp)
 
 
 target_include_directories(Main PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/core
+        ${CMAKE_CURRENT_SOURCE_DIR}/graph
+        ${CMAKE_CURRENT_SOURCE_DIR}/containers
+        ${CMAKE_CURRENT_SOURCE_DIR}/algorithms
 )
 
 target_link_libraries(Main PRIVATE
         Qt6::Widgets
-        core
+        graph
+        containers
+        algorithms
 )
