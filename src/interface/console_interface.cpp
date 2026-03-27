@@ -1,5 +1,6 @@
 #include "console_interface.h"
 
+#include <filesystem>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -18,7 +19,7 @@ namespace s21 {
       if (!(std::cin >> choice)) {
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cerr << "Input error. Please enter a number.\n";
+        std::cerr << "Input error. Please enter a valid number.\n";
         continue;
       }
 
@@ -46,7 +47,7 @@ namespace s21 {
             HandleTravelingSalesmanProblem();
             break;
           case 0:
-            std::cout << "Program завершена.\n";
+            std::cout << "Program finished.\n";
             break;
           default:
             std::cout << "Incorrect menu item.\n";
@@ -54,6 +55,8 @@ namespace s21 {
         }
       } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
       }
     }
   }
@@ -76,10 +79,36 @@ namespace s21 {
     std::cout << "Enter graph file path: ";
     std::cin >> filename;
 
-    graph_.LoadGraphFromFile(filename);
-    graph_loaded_ = true;
+    const std::vector<std::string> candidates = {
+        filename,
+        "./" + filename,
+        "../" + filename,
+        "data/" + filename,
+        "../data/" + filename,
+        "../../data/" + filename
+    };
 
+    bool loaded = false;
+    std::string used_path;
+
+    for (const auto& path : candidates) {
+      if (std::filesystem::exists(path)) {
+        graph_.LoadGraphFromFile(path);
+        loaded = true;
+        used_path = path;
+        break;
+      }
+    }
+
+    if (!loaded) {
+      std::cout << "Current working directory: "
+                << std::filesystem::current_path() << '\n';
+      throw std::invalid_argument("Failed to open graph file");
+    }
+
+    graph_loaded_ = true;
     std::cout << "Graph loaded successfully.\n";
+    std::cout << "Loaded from: " << used_path << '\n';
     std::cout << "Number of vertices: " << graph_.GetSize() << '\n';
   }
 
@@ -128,8 +157,8 @@ namespace s21 {
     std::cout << "Enter second vertex: ";
     std::cin >> vertex2;
 
-    int distance = GraphAlgorithms::GetShortestPathBetweenVertices(
-        graph_, vertex1, vertex2);
+    int distance =
+        GraphAlgorithms::GetShortestPathBetweenVertices(graph_, vertex1, vertex2);
 
     if (distance >= kInf) {
       std::cout << "Path between vertices does not exist.\n";
