@@ -22,15 +22,34 @@ target_include_directories(Main PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/graph
         ${CMAKE_CURRENT_SOURCE_DIR}/containers
-        ${CMAKE_CURRENT_SOURCE_DIR}/algorithms$
+        ${CMAKE_CURRENT_SOURCE_DIR}/algorithms
         ${CMAKE_CURRENT_SOURCE_DIR}/data
         ${CMAKE_CURRENT_SOURCE_DIR}/interface
 )
 
 target_link_libraries(Main PRIVATE
-        Qt6::Widgets
         graph
         containers
         algorithms
         interface
+)
+
+add_executable(run_test
+        run_tests.cpp
+)
+
+target_include_directories(run_test PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/graph
+        ${CMAKE_CURRENT_SOURCE_DIR}/containers
+        ${CMAKE_CURRENT_SOURCE_DIR}/algorithms
+        ${CMAKE_CURRENT_SOURCE_DIR}/test
+)
+
+target_link_libraries(run_test PRIVATE
+        graph
+        containers
+        algorithms
+        GTest::gtest
+        GTest::gtest_main
 )
