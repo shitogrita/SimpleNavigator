@@ -1,183 +1,145 @@
 #pragma once
 
-#include <utility>
 #include <initializer_list>
 #include <ostream>
+#include <stdexcept>
+#include <utility>
+
 #include "stack.h"
 
 namespace s21 {
-    template <typename T>
-    class Queue {
-        using value_type = T;
-        using reference = T&;
-        using const_reference = const T&;
-        using size_type = size_t;
-        using pointer = T*;
 
-        size_type _size = 0;
-        Stack<T> _front;
-        Stack<T> _back;
+template <typename T>
+class Queue {
+ public:
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using size_type = size_t;
 
-      public:
-        Queue() = default;
-        Queue(std::initializer_list<T> const &items);
-        Queue(const Queue &q);
-        Queue(Queue &&q);
-        ~Queue();
-        Queue& operator=(Queue &&q);
-        Queue& operator=(const Queue &q);
+  Queue() = default;
+  Queue(std::initializer_list<T> const& items);
+  Queue(const Queue& q) = default;
+  Queue(Queue&& q) = default;
+  ~Queue() = default;
 
-        const_reference front() const;
-        const_reference back() const;
-        reference back();
-        reference front();
+  Queue& operator=(const Queue& q) = default;
+  Queue& operator=(Queue&& q) = default;
 
-        bool empty();
-        size_type size();
+  reference front();
+  const_reference front() const;
 
-        void push(const_reference value);
-        void pop();
-        void swap(Queue& other);
+  reference back();
+  const_reference back() const;
 
-        template <typename U>
-        friend std::ostream& operator<<(std::ostream& os, const Queue<U>& queue);
+  bool empty() const;
+  size_type size() const;
 
-      private:
-        void flush(bool to_back = true);
-    };
+  void push(const_reference value);
+  void pop();
+  void swap(Queue& other);
+
+ private:
+  void MoveToPopStack();
+  void MoveToPushStack() const;
+
+  size_type size_ = 0;
+  Stack<T> push_stack_;
+  Stack<T> pop_stack_;
 };
 
 template <typename T>
-void s21::Queue<T>::flush(bool to_back) {
-    if (to_back) {
-        while (!_front.empty()) {
-            _back.push(_front.top());
-            _front.pop();
-        }
-    } else {
-        while (!_back.empty()) {
-            _front.push(_back.top());
-            _back.pop();
-        }
+Queue<T>::Queue(std::initializer_list<T> const& items) {
+  for (const T& elem : items) {
+    push(elem);
+  }
+}
+
+template <typename T>
+void Queue<T>::MoveToPopStack() {
+  if (pop_stack_.empty()) {
+    while (!push_stack_.empty()) {
+      pop_stack_.push(push_stack_.top());
+      push_stack_.pop();
     }
+  }
 }
 
 template <typename T>
-s21::Queue<T>::Queue(std::initializer_list<T> const &items) {
-    for (const T& elem : items) {
-        _back.push(elem);  //  кладём в _back, не в _front
-        ++_size;
-    }
-    flush(false);
+typename Queue<T>::reference Queue<T>::front() {
+  if (empty()) {
+    throw std::runtime_error("Queue is empty");
+  }
+  MoveToPopStack();
+  return pop_stack_.top();
 }
 
 template <typename T>
-s21::Queue<T>::Queue(const Queue &q) : _size(q._size), _front(q._front), _back(q._back) {}
-
-template <typename T>
-s21::Queue<T>::Queue(Queue &&q) {
-    *this = std::move(q);
+typename Queue<T>::const_reference Queue<T>::front() const {
+  if (empty()) {
+    throw std::runtime_error("Queue is empty");
+  }
+  return const_cast<Queue*>(this)->front();
 }
 
 template <typename T>
-s21::Queue<T>::~Queue() {
-    flush();
-    while (!_back.empty()) {
-        _back.pop();
-    }
+typename Queue<T>::reference Queue<T>::back() {
+  if (empty()) {
+    throw std::runtime_error("Queue is empty");
+  }
+
+  if (!push_stack_.empty()) {
+    return push_stack_.top();
+  }
+
+  while (!pop_stack_.empty()) {
+    push_stack_.push(pop_stack_.top());
+    pop_stack_.pop();
+  }
+
+  return push_stack_.top();
 }
 
 template <typename T>
-typename s21::Queue<T>& s21::Queue<T>::operator=(const Queue &q) {
-    if (this != &q) {
-        _front = q._front;
-        _back = q._back;
-        _size = q._size;
-    }
-    return *this;
+typename Queue<T>::const_reference Queue<T>::back() const {
+  if (empty()) {
+    throw std::runtime_error("Queue is empty");
+  }
+  return const_cast<Queue*>(this)->back();
 }
 
 template <typename T>
-typename s21::Queue<T>& s21::Queue<T>::operator=(Queue &&q) {
-    if (this != &q) {
-        _front = std::move(q._front);
-        _back = std::move(q._back);
-        _size = std::move(q._size);
-        q._size = 0;
-    }
-    return *this;
-}
-
-
-
-template <typename T>
-typename s21::Queue<T>::const_reference s21::Queue<T>::front() const {
-    if (empty()) throw std::runtime_error("Calling front() on empty queue");
-    if (_front.empty()) flush(false);  
-    return _front.top(); 
+bool Queue<T>::empty() const {
+  return size_ == 0;
 }
 
 template <typename T>
-typename s21::Queue<T>::reference s21::Queue<T>::front() {
-    if (empty()) throw std::runtime_error("Calling front() on empty queue");
-    if (_front.empty()) flush(false);  
-    return _front.top(); 
+typename Queue<T>::size_type Queue<T>::size() const {
+  return size_;
 }
 
 template <typename T>
-typename s21::Queue<T>::const_reference s21::Queue<T>::back() const {
-    if (empty()) throw std::runtime_error("Calling back() on empty queue");
-    if (_back.empty()) flush(true);
-    return _back.top();
+void Queue<T>::push(const_reference value) {
+  push_stack_.push(value);
+  ++size_;
 }
 
 template <typename T>
-typename s21::Queue<T>::reference s21::Queue<T>::back() {
-    if (empty()) throw std::runtime_error("Calling back() on empty queue");
-    if (_back.empty()) flush(true);
-    return _back.top();
-}
+void Queue<T>::pop() {
+  if (empty()) {
+    throw std::runtime_error("Queue is empty");
+  }
 
-
-template <typename T>
-bool s21::Queue<T>::empty() {
-    return _size == 0;
-}
-
-template <typename T>
-typename s21::Queue<T>::size_type s21::Queue<T>::size() {
-    return _size;
+  MoveToPopStack();
+  pop_stack_.pop();
+  --size_;
 }
 
 template <typename T>
-void s21::Queue<T>::push(const_reference value) {
-    _front.push(value);
-    ++_size;
+void Queue<T>::swap(Queue& other) {
+  std::swap(push_stack_, other.push_stack_);
+  std::swap(pop_stack_, other.pop_stack_);
+  std::swap(size_, other.size_);
 }
 
-template <typename T>
-void s21::Queue<T>::pop() {
-    if (_size == 0) throw std::runtime_error("Queue is empty");
-    if (_back.empty()) flush(true);
-    _back.pop();
-    --_size;
 }
-
-template <typename T>
-void s21::Queue<T>::swap(Queue& other) {
-    std::swap(_front, other._front);
-    std::swap(_back, other._back);
-    std::swap(_size, other._size);
-}
-
-namespace s21 {
-    template <typename T>
-    std::ostream& operator<<(std::ostream& os, const s21::Queue<T>& queue) {
-        auto tmp = queue;
-        while (!tmp.empty()) {
-            os << tmp.front() << ' ';
-            tmp.pop();
-        }
-        return os;
-    }
-};
