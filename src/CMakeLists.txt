@@ -14,15 +14,17 @@ find_package(GTest REQUIRED)
 add_subdirectory(graph)
 add_subdirectory(containers)
 add_subdirectory(algorithms)
+add_subdirectory(interface)
 
 add_executable(Main main.cpp)
-
 
 target_include_directories(Main PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/graph
         ${CMAKE_CURRENT_SOURCE_DIR}/containers
-        ${CMAKE_CURRENT_SOURCE_DIR}/algorithms
+        ${CMAKE_CURRENT_SOURCE_DIR}/algorithms$
+        ${CMAKE_CURRENT_SOURCE_DIR}/data
+        ${CMAKE_CURRENT_SOURCE_DIR}/interface
 )
 
 target_link_libraries(Main PRIVATE
@@ -30,4 +32,5 @@ target_link_libraries(Main PRIVATE
         graph
         containers
         algorithms
+        interface
 )

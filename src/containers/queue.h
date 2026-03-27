@@ -65,7 +65,7 @@ void s21::Queue<T>::flush(bool to_back) {
 template <typename T>
 s21::Queue<T>::Queue(std::initializer_list<T> const &items) {
     for (const T& elem : items) {
-        _back.push(elem);  // ⬅️ кладём в _back, не в _front
+        _back.push(elem);  //  кладём в _back, не в _front
         ++_size;
     }
     flush(false);

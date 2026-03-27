@@ -1,5 +1,8 @@
-#include <iostream>
+
+#include "interface/console_interface.h"
 
 int main() {
-	std::cout << "hi" << std::endl;
+	s21::ConsoleInterface app;
+	app.Run();
+	return 0;
 }
