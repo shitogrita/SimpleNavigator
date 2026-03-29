@@ -5,6 +5,7 @@
 
 #include "../algorithms/s21_graph_algorithms.h"
 #include "../graph/s21_graph.h"
+#include "../algorithms/s21_tsp_compare.h"
 
 namespace s21 {
 
@@ -24,6 +25,7 @@ namespace s21 {
 		void HandleShortestPathsBetweenAllVertices() const;
 		void HandleLeastSpanningTree() const;
 		void HandleTravelingSalesmanProblem() const;
+		void HandleCompareTravelingSalesmanAlgorithms() const;
 
 		void PrintVector(const std::vector<int>& data) const;
 		void PrintMatrix(const std::vector<std::vector<int>>& matrix) const;

@@ -17,8 +17,9 @@ namespace s21 {
 		static std::vector<std::vector<int>> GetLeastSpanningTree(const Graph& graph);
 		static TsmResult SolveTravelingSalesmanProblem(const Graph& graph);
 		// дополнительные алгоритмы для Part 6
-		static TsmResult SolveTSP_BruteForce(const Graph& graph);
-		static TsmResult SolveTSP_HeldKarp(const Graph& graph);
+		static TsmResult SolveTravelingSalesmanProblemNearestNeighbor(const Graph& graph);
+
+		static TsmResult SolveTravelingSalesmanProblemBruteForce(const Graph& graph);
 	};
 
 }

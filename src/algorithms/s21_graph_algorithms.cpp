@@ -81,7 +81,7 @@ namespace s21 {
             for (int j = 0; j < n; ++j) {
                 if (!visited[j] && (u == -1 || dist[j] < dist[u])) u = j;
             }
-            if (dist[u] == INF) break;
+            if (u == -1 || dist[u] == INF) break;
             visited[u] = true;
             for (int v = 0; v < n; ++v) {
                 if (matrix[u][v] != 0 && !visited[v] && dist[u] + matrix[u][v] < dist[v]) {
@@ -264,6 +264,154 @@ namespace s21 {
         if (best.distance >= INF) {
             throw std::runtime_error("No Hamiltonian cycle found");
         }
+        return best;
+    }
+
+
+    namespace {
+        const int kInf = std::numeric_limits<int>::max() / 2;
+
+        void ValidateCompleteGraph(const s21::Graph& graph) {
+            int n = graph.GetSize();
+            const auto& matrix = graph.GetAdjacencyMatrix();
+
+            if (n == 0) {
+                throw std::runtime_error("Graph is empty");
+            }
+
+            for (int i = 0; i < n; ++i) {
+                for (int j = 0; j < n; ++j) {
+                    if (i != j && matrix[i][j] == 0) {
+                        throw std::runtime_error("Graph is not complete, TSP may be impossible");
+                    }
+                }
+            }
+        }
+
+        double CalculateRouteDistance(const std::vector<std::vector<int>>& matrix,
+                                      const std::vector<int>& route) {
+            double distance = 0.0;
+            for (size_t i = 0; i + 1 < route.size(); ++i) {
+                int u = route[i];
+                int v = route[i + 1];
+                if (matrix[u][v] == 0 && u != v) {
+                    return kInf;
+                }
+                distance += matrix[u][v];
+            }
+            return distance;
+        }
+    }
+
+    TsmResult GraphAlgorithms::SolveTravelingSalesmanProblemNearestNeighbor(
+    const Graph& graph) {
+        ValidateCompleteGraph(graph);
+
+        int n = graph.GetSize();
+        const auto& matrix = graph.GetAdjacencyMatrix();
+
+        TsmResult best;
+        best.distance = kInf;
+
+        for (int start = 0; start < n; ++start) {
+            std::vector<bool> visited(n, false);
+            std::vector<int> route;
+            double total_distance = 0.0;
+
+            int current = start;
+            visited[current] = true;
+            route.push_back(current);
+
+            for (int step = 1; step < n; ++step) {
+                int next_vertex = -1;
+                int min_edge = kInf;
+
+                for (int v = 0; v < n; ++v) {
+                    if (!visited[v] && matrix[current][v] != 0 &&
+                        matrix[current][v] < min_edge) {
+                        min_edge = matrix[current][v];
+                        next_vertex = v;
+                        }
+                }
+
+                if (next_vertex == -1) {
+                    total_distance = kInf;
+                    break;
+                }
+
+                visited[next_vertex] = true;
+                route.push_back(next_vertex);
+                total_distance += matrix[current][next_vertex];
+                current = next_vertex;
+            }
+
+            if (total_distance < kInf && matrix[current][start] != 0) {
+                total_distance += matrix[current][start];
+                route.push_back(start);
+            } else {
+                total_distance = kInf;
+            }
+
+            if (total_distance < best.distance) {
+                best.distance = total_distance;
+                best.vertices = route;
+            }
+        }
+
+        if (best.distance >= kInf) {
+            throw std::runtime_error("No Hamiltonian cycle found");
+        }
+
+        for (auto& v : best.vertices) {
+            ++v;
+        }
+
+        return best;
+    }
+    TsmResult GraphAlgorithms::SolveTravelingSalesmanProblemBruteForce(
+    const Graph& graph) {
+        ValidateCompleteGraph(graph);
+
+        int n = graph.GetSize();
+        const auto& matrix = graph.GetAdjacencyMatrix();
+
+        if (n > 10) {
+            throw std::runtime_error(
+                "Brute force TSP is allowed only for graphs with up to 10 vertices");
+        }
+
+        std::vector<int> perm;
+        for (int i = 1; i < n; ++i) {
+            perm.push_back(i);
+        }
+
+        TsmResult best;
+        best.distance = kInf;
+
+        do {
+            std::vector<int> route;
+            route.push_back(0);
+            for (int v : perm) {
+                route.push_back(v);
+            }
+            route.push_back(0);
+
+            double current_distance = CalculateRouteDistance(matrix, route);
+
+            if (current_distance < best.distance) {
+                best.distance = current_distance;
+                best.vertices = route;
+            }
+        } while (std::next_permutation(perm.begin(), perm.end()));
+
+        if (best.distance >= kInf) {
+            throw std::runtime_error("No Hamiltonian cycle found");
+        }
+
+        for (auto& v : best.vertices) {
+            ++v;
+        }
+
         return best;
     }
 };
